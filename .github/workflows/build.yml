@@ -48,6 +48,8 @@ jobs:
     needs: asterisk-versions
     runs-on: ubuntu-latest
     strategy:
+      max-parallel: 64
+      fail-fast: false
       matrix: ${{ fromJson(needs.asterisk-versions.outputs.matrix) }}
 
     steps:
