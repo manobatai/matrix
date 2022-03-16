@@ -42,7 +42,6 @@ jobs:
           # JSON_MATRIX="{\"include\":[{\"run\":\"run1\"},{\"run\":\"run2\"}]}"
           # echo "::set-output name=matrix::${JSON_MATRIX}"
           JSON_MATRIX="$(echo -n "${ASTERISK_VERSIONS}" | jq --slurp -c -R 'split(" ") | map({run: .}) | {include: .}')"
-          # echo "::set-output name=matrix::${{ toJson(${JSON_MATRIX}) }}"
           echo "::set-output name=matrix::${JSON_MATRIX}"
 
   build:
