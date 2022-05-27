@@ -87,7 +87,8 @@ BUILD_RELEASES="$(
 
 echo -e "$BUILD_RELEASES"
 JSON_MATRIX="$(
-  echo -n "$BUILD_RELEASES" \
+  echo -en "$BUILD_RELEASES" \
+  | xargs \
   | jq --slurp -c -R 'split(" ") | map({run: .}) | {include: .}'
 )"
 

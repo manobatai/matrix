@@ -80,6 +80,7 @@ jobs:
           # echo "::set-output name=matrix::${JSON_MATRIX}"
           JSON_MATRIX="$(
             echo -n "$BUILD_RELEASES" \
+            | xargs \
             | jq --slurp -c -R 'split(" ") | map({run: .}) | {include: .}'
           )"
           echo "::set-output name=matrix::${JSON_MATRIX}"
