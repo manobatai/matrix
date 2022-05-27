@@ -3,15 +3,15 @@ name: Build Asterisk for every major release
 on: push
 
 jobs:
-  set-matrix:
+  discover_asterisk_releases:
     name: Set dynamic matrix based on Asterisk major releases
     runs-on: ubuntu-latest
     outputs:
-       matrix: ${{ steps.set-matrix.outputs.value }}
+       matrix: ${{ steps.discover_asterisk_releases.outputs.matrix }}
 
     steps:
       - name: Set dynamic matrix
-        id: set-matrix
+        id: discover_asterisk_releases
         shell: bash
         run: |
           set -ueo pipefail
@@ -83,7 +83,7 @@ jobs:
           )"
 
           # JSON_MATRIX="{\"include\":[{\"run\":\"run1\"},{\"run\":\"run2\"}]}"
-          # echo "::set-output name=value::${JSON_MATRIX}"
+          # echo "::set-output name=matrix::${JSON_MATRIX}"
 
           JSON_MATRIX="$(
             echo -n "$BUILD_RELEASES" \
@@ -91,15 +91,15 @@ jobs:
             | jq --slurp -c -R 'split(" ") | map({run: .}) | {include: .}'
           )"
 
-          echo "::set-output name=value::${JSON_MATRIX}"
+          echo "::set-output name=matrix::${JSON_MATRIX}"
 
   build:
-    needs: set-matrix
+    needs: discover_asterisk_releases
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 64
       fail-fast: false
-      matrix: ${{ fromJson(needs.set-matrix.outputs.value) }}
+      matrix: ${{ fromJson(needs.discover_asterisk_releases.outputs.matrix) }}
 
     steps:
     - run: echo "Building asterisk-${{ matrix.run }}"
