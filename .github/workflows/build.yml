@@ -19,29 +19,69 @@ jobs:
             http://downloads.asterisk.org/pub/telephony/asterisk/releases/ \
             http://downloads.asterisk.org/pub/telephony/asterisk/ \
             http://downloads.asterisk.org/pub/telephony/asterisk/old-releases/ \
-            http://downloads.asterisk.org/pub/telephony/certified-asterisk/ \
-            http://downloads.asterisk.org/pub/telephony/certified-asterisk/releases/ \
           )
 
-          ASTERISK_VERSIONS=""
-
+          ASTERISK_RELEASES=""
           for URL in "${URLS[@]}"; do
-            _ASTERISK_VERSIONS="$( \
-              curl -sL "${URL}" \
+            _ASTERISK_RELEASES="$( \
+              curl \
+                --silent \
+                --location \
+                --connect-timeout 5 \
+                --max-time 10 \
+                --retry 5 \
+                --retry-delay 0 \
+                --retry-max-time 40 \
+                "${URL}" \
               | grep '<a href="asterisk.*.tar.gz">' \
               | grep -v '\-patch\|\-addons\|\-sounds' \
               | awk -F '</td><td>|">asterisk' '{print $2}' \
               | awk -F '"' '{print $NF}' \
+              | awk -F 'asterisk-' '{print $NF}' \
               | awk -F '.tar.gz' '{print $1}' \
             )"
-            ASTERISK_VERSIONS="$(echo -e "\n${ASTERISK_VERSIONS}\n${_ASTERISK_VERSIONS}")"
+            ASTERISK_RELEASES="$(echo -en "${ASTERISK_RELEASES}\n${_ASTERISK_RELEASES}")"
           done
 
-          ASTERISK_VERSIONS="$(echo -e "${ASTERISK_VERSIONS}" | sort -u | xargs)"
+          ASTERISK_RELEASES="$( \
+            echo -en "${ASTERISK_RELEASES}" | sort --unique \
+            | sort --field-separator='.' --key=1,1n  --key=2,2n --key=3,3n --key=4,4n \
+          )"
+
+          ALPHA_RELEASES="$(echo -en "$ASTERISK_RELEASES" | grep -P '\-alpha\d+$')"
+          BETA_RELEASES="$(echo -en "$ASTERISK_RELEASES" | grep -P '\-beta\d+$')"
+          RC_RELEASES="$(echo -en "$ASTERISK_RELEASES" | grep -P '\-rc\d+$')"
+          CURRENT_RELEASES="$(echo -en "$ASTERISK_RELEASES" | grep -P '\-current$')"
+          STABLE_RELEASES="$(echo -en "$ASTERISK_RELEASES" | grep -P '\d+\.\d+\.\d+(|\.\d+(|\.\d+))$')"
+
+          BUILD_RELEASES="$(
+            set +e
+            for MAJOR_RELEASE in '1.2' '1.4' '1.6' '1.8' '10' '11' '12' '13' '14' '15' '16' '17' '18' '19'
+            do
+              STABLE_RELEASE="$(echo -en "$STABLE_RELEASES" | grep "^$MAJOR_RELEASE\." | tail -n1)"
+              echo "$STABLE_RELEASE"
+              echo -en "$CURRENT_RELEASES" | grep "^$MAJOR_RELEASE-" | tail -n1
+              RECENT_TEST_RELEASE="$(
+                (
+                  echo -en "$STABLE_RELEASES" | grep "^$MAJOR_RELEASE\." | tail -n1
+                  echo -en "$ALPHA_RELEASES" | grep "^$MAJOR_RELEASE\." | tail -n1
+                  echo -en "$BETA_RELEASES" | grep "^$MAJOR_RELEASE\." | tail -n1
+                  echo -en "$RC_RELEASES" | grep "^$MAJOR_RELEASE\." | tail -n1
+                ) \
+                | sort --field-separator='.' --key=1,1n  --key=2,2n --key=3,3n --key=4,4n \
+                | tail -n1
+              )"
+              echo "$RECENT_TEST_RELEASE" | grep "$STABLE_RELEASE" > /dev/null || echo "$RECENT_TEST_RELEASE"
+            done
+            set -e
+          )"
 
           # JSON_MATRIX="{\"include\":[{\"run\":\"run1\"},{\"run\":\"run2\"}]}"
           # echo "::set-output name=matrix::${JSON_MATRIX}"
-          JSON_MATRIX="$(echo -n "${ASTERISK_VERSIONS}" | jq --slurp -c -R 'split(" ") | map({run: .}) | {include: .}')"
+          JSON_MATRIX="$(
+            echo -n "$BUILD_RELEASES" \
+            | jq --slurp -c -R 'split(" ") | map({run: .}) | {include: .}'
+          )"
           echo "::set-output name=matrix::${JSON_MATRIX}"
 
   build:
