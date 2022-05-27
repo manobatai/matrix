@@ -1,16 +1,17 @@
-name: Build Asterisk PBX for every major release
+name: Build Asterisk for every major release
 
 on: push
 
 jobs:
-  asterisk-versions:
+  set-matrix:
+    name: Set dynamic matrix based on Asterisk major releases
     runs-on: ubuntu-latest
     outputs:
-       matrix: ${{ steps.setmatrix.outputs.matrix }}
+       matrix: ${{ steps.set-matrix.outputs.value }}
 
     steps:
       - name: Set dynamic matrix
-        id: setmatrix
+        id: set-matrix
         shell: bash
         run: |
           set -ueo pipefail
@@ -58,6 +59,11 @@ jobs:
             set +e
             for MAJOR_RELEASE in '1.2' '1.4' '1.6' '1.8' '10' '11' '12' '13' '14' '15' '16' '17' '18' '19'
             do
+              # Code below returns asterisk release numbers for:
+              # - stable (10.20.30);
+              # - current (10-current), if applicable for given Asterisk major version;
+              # - alpha/beta/rc version (10.20.29-rc1), only if it's much recent
+              #   than latest stable release number
               STABLE_RELEASE="$(echo -en "$STABLE_RELEASES" | grep "^$MAJOR_RELEASE\." | tail -n1)"
               echo "$STABLE_RELEASE"
               echo -en "$CURRENT_RELEASES" | grep "^$MAJOR_RELEASE-" | tail -n1
@@ -77,21 +83,23 @@ jobs:
           )"
 
           # JSON_MATRIX="{\"include\":[{\"run\":\"run1\"},{\"run\":\"run2\"}]}"
-          # echo "::set-output name=matrix::${JSON_MATRIX}"
+          # echo "::set-output name=value::${JSON_MATRIX}"
+
           JSON_MATRIX="$(
             echo -n "$BUILD_RELEASES" \
             | xargs \
             | jq --slurp -c -R 'split(" ") | map({run: .}) | {include: .}'
           )"
-          echo "::set-output name=matrix::${JSON_MATRIX}"
+
+          echo "::set-output name=value::${JSON_MATRIX}"
 
   build:
-    needs: asterisk-versions
+    needs: set-matrix
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 64
       fail-fast: false
-      matrix: ${{ fromJson(needs.asterisk-versions.outputs.matrix) }}
+      matrix: ${{ fromJson(needs.set-matrix.outputs.value) }}
 
     steps:
     - run: echo "Building asterisk-${{ matrix.run }}"
