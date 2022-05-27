@@ -1,4 +1,4 @@
-name: Build every Asterisk PBX version
+name: Build Asterisk PBX for every major release
 
 on: push
 
@@ -9,11 +9,11 @@ jobs:
        matrix: ${{ steps.setmatrix.outputs.matrix }}
 
     steps:
-      - name: Set Dynamic Matrix
+      - name: Set dynamic matrix
         id: setmatrix
         shell: bash
         run: |
-          set -ueox pipefail
+          set -ueo pipefail
 
           URLS=( \
             http://downloads.asterisk.org/pub/telephony/asterisk/releases/ \
@@ -94,7 +94,5 @@ jobs:
       matrix: ${{ fromJson(needs.asterisk-versions.outputs.matrix) }}
 
     steps:
-    - run: echo Run ${{ matrix.run }}
-    - run: date
-    - run: sleep 1
+    - run: echo "Building asterisk-${{ matrix.run }}"
     - run: date
