@@ -24,7 +24,7 @@ jobs:
       - name: Fetch asterisk releases
         shell: bash
         run: |
-          set -ueox pipefail
+          set -ueo pipefail
 
           URLS=( \
             http://downloads.asterisk.org/pub/telephony/asterisk/releases/ \
