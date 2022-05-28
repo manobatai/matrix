@@ -94,12 +94,12 @@ jobs:
           echo "::set-output name=matrix::${JSON_MATRIX}"
 
   build:
-    needs: releases
+    # needs: releases
     # runs-on: ubuntu-latest
-    strategy:
-      max-parallel: 64
-      fail-fast: false
-      matrix: ${{ fromJson(needs.releases.outputs.matrix) }}
+    # strategy:
+    #   max-parallel: 64
+    #   fail-fast: false
+    #   matrix: ${{ fromJson(needs.releases.outputs.matrix) }}
     uses: ./.github/workflows/build-asterisk.yml
 
     # steps:
