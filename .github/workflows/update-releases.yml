@@ -24,12 +24,8 @@ jobs:
       - name: Fetch asterisk releases
         shell: bash
         run: |
-          set -ueox pipefail
-
-          fetch() {
-            set +u
+          function fetch() {
             declare -a URLS=("${!1}")
-            set -u
             local ASTERISK_RELEASES=""
 
             for URL in "${URLS[@]}"; do

@@ -43,8 +43,8 @@ URLS=( \
   http://downloads.asterisk.org/pub/telephony/asterisk/old-releases/ \
 )
 
-# ASTERISK_RELEASES="$(fetch URLS[@])"
-# echo -e "$ASTERISK_RELEASES" > asterisk-releases.txt
+ASTERISK_RELEASES="$(fetch URLS[@])"
+echo -e "$ASTERISK_RELEASES" > asterisk-releases-dev.txt
 
 
 
