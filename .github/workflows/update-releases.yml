@@ -76,6 +76,7 @@ jobs:
             http://downloads.asterisk.org/pub/telephony/certified-asterisk/ \
             http://downloads.asterisk.org/pub/telephony/certified-asterisk/releases/ \
           )
+          ASTERISK_CERTIFIED_RELEASES="$(fetch URLS[@])"
           ASTERISK_CERTIFIED_RELEASES="$( \
             echo -en "${ASTERISK_CERTIFIED_RELEASES}" \
             | sort --field-separator='t' --key=2,1n \
