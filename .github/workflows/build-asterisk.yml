@@ -3,14 +3,19 @@ name: Build Asterisk PBX
 on:
   workflow_call:
     inputs:
-      relsease:
+      releases:
         required: true
         type: string
 
 jobs:
   build-asterisk:
-    name: Build Asterisk PBX ${{ inputs.release }}
+    name: Build Asterisk PBX
     runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 64
+      fail-fast: false
+      matrix: ${{ fromJson(inputs.releases) }}
+
     steps:
       - uses: actions/checkout@v3
 
@@ -26,53 +31,49 @@ jobs:
         run: |
           set -ueox pipefail
 
-          cd debian
+          RELEASE="${{ matrix.run }}"
 
-          function build() {
-          }
-
-          if [ "${{ inputs.release }}" = "1.2" ]; then
+          if [ "$RELEASE" = "1.2" ]; then
             DEBIAN_RELEASE="jessie-slim"
             ASTERISK_VERSION="1.2.40"
             ASTERISK_ADDONS_VERSION="1.2.9"
-            build "$DEBIAN_RELEASE" "$ASTERISK_VERSION" "$ASTERISK_ADDONS_VERSION"
-            echo "Building Asterisk PBX ${{ inputs.release }}"
-          elif [ "${{ inputs.release }}" = "1.4" ]; then
+            echo "Building Asterisk PBX $RELEASE"
+          elif [ "$RELEASE" = "1.4" ]; then
             DEBIAN_RELEASE="jessie-slim"
             ASTERISK_VERSION="1.4.44"
             ASTERISK_ADDONS_VERSION="1.4.13"
-            echo "Building Asterisk PBX ${{ inputs.release }}"
-          elif [ "${{ inputs.release }}" = "1.6" ]; then
+            echo "Building Asterisk PBX $RELEASE"
+          elif [ "$RELEASE" = "1.6" ]; then
             DEBIAN_RELEASE="jessie-slim"
             ASTERISK_VERSION="1.6.2.24"
             ASTERISK_ADDONS_VERSION="1.6.2.4"
-            echo "Building Asterisk PBX ${{ inputs.release }}"
-          elif [ "${{ inputs.release }}" = "1.8" ]; then
+            echo "Building Asterisk PBX $RELEASE"
+          elif [ "$RELEASE" = "1.8" ]; then
             DEBIAN_RELEASE="jessie-slim"
             ASTERISK_VERSION="1.8.32.3"
-            echo "Building Asterisk PBX ${{ inputs.release }}"
-          elif [ "${{ inputs.release }}" = "10" ]; then
-            echo "Building Asterisk PBX ${{ inputs.release }}"
-          elif [ "${{ inputs.release }}" = "11" ]; then
-            echo "Building Asterisk PBX ${{ inputs.release }}"
-          elif [ "${{ inputs.release }}" = "12" ]; then
-            echo "Building Asterisk PBX ${{ inputs.release }}"
-          elif [ "${{ inputs.release }}" = "13" ]; then
-            echo "Building Asterisk PBX ${{ inputs.release }}"
-          elif [ "${{ inputs.release }}" = "14" ]; then
-            echo "Building Asterisk PBX ${{ inputs.release }}"
-          elif [ "${{ inputs.release }}" = "15" ]; then
-            echo "Building Asterisk PBX ${{ inputs.release }}"
-          elif [ "${{ inputs.release }}" = "16" ]; then
-            echo "Building Asterisk PBX ${{ inputs.release }}"
-          elif [ "${{ inputs.release }}" = "17" ]; then
-            echo "Building Asterisk PBX ${{ inputs.release }}"
-          elif [ "${{ inputs.release }}" = "18" ]; then
-            echo "Building Asterisk PBX ${{ inputs.release }}"
-          elif [ "${{ inputs.release }}" = "19" ]; then
-            echo "Building Asterisk PBX ${{ inputs.release }}"
+            echo "Building Asterisk PBX $RELEASE"
+          elif [ "$RELEASE" = "10" ]; then
+            echo "Building Asterisk PBX $RELEASE"
+          elif [ "$RELEASE" = "11" ]; then
+            echo "Building Asterisk PBX $RELEASE"
+          elif [ "$RELEASE" = "12" ]; then
+            echo "Building Asterisk PBX $RELEASE"
+          elif [ "$RELEASE" = "13" ]; then
+            echo "Building Asterisk PBX $RELEASE"
+          elif [ "$RELEASE" = "14" ]; then
+            echo "Building Asterisk PBX $RELEASE"
+          elif [ "$RELEASE" = "15" ]; then
+            echo "Building Asterisk PBX $RELEASE"
+          elif [ "$RELEASE" = "16" ]; then
+            echo "Building Asterisk PBX $RELEASE"
+          elif [ "$RELEASE" = "17" ]; then
+            echo "Building Asterisk PBX $RELEASE"
+          elif [ "$RELEASE" = "18" ]; then
+            echo "Building Asterisk PBX $RELEASE"
+          elif [ "$RELEASE" = "19" ]; then
+            echo "Building Asterisk PBX $RELEASE"
           else
-            echo "unsupported version"
+            echo "Unsupported release"
             exit 1
           fi
 
