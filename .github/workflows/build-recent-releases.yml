@@ -102,5 +102,5 @@ jobs:
       matrix: ${{ fromJson(needs.releases.outputs.matrix) }}
 
     uses: ./.github/workflows/build-asterisk.yml
-      with:
-        release: ${{ matrix.run }}
+    with:
+      release: ${{ matrix.run }}
