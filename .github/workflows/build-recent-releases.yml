@@ -1,17 +1,23 @@
 name: Build recent Asterisk releases
 
-on: push
+on:
+  workflow_dispatch:
+
+  push:
+    paths:
+      - .github/workflows/build-recent-releases.yml
 
 jobs:
-  releases:
+  recent-releases:
     name: Discover major Asterisk releases
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
+    timeout-minutes: 5
     outputs:
-       matrix: ${{ steps.releases.outputs.matrix }}
+       matrix: ${{ steps.recent-releases.outputs.matrix }}
 
     steps:
       - name: Set dynamic matrix
-        id: releases
+        id: recent-releases
         shell: bash
         run: |
           set -ueo pipefail
@@ -82,23 +88,25 @@ jobs:
             set -e
           )"
 
-          echo "Continue to build following Asterisk PBX releases:"
-          echo "=================================================="
-          echo -e "$BUILD_RELEASES"
-
           # JSON_MATRIX="{\"include\":[{\"run\":\"run1\"},{\"run\":\"run2\"}]}"
           # echo "::set-output name=matrix::${JSON_MATRIX}"
 
           JSON_MATRIX="$(
             echo -n "$BUILD_RELEASES" \
-            | xargs \
+            | tr '\n' ' ' \
             | jq --slurp -c -R 'split(" ") | map({run: .}) | {include: .}'
           )"
 
           echo "::set-output name=matrix::${JSON_MATRIX}"
 
+          echo "Continue to build following Asterisk PBX releases:"
+          echo "=================================================="
+          echo -en "$BUILD_RELEASES"
+          echo "=================================================="
+          echo -en "$JSON_MATRIX" | jq
+
   build:
-    needs: releases
+    needs: recent-releases
     uses: ./.github/workflows/build-asterisk.yml
     with:
-      releases: ${{ needs.releases.outputs.matrix }}
+      releases: ${{ needs.recent-releases.outputs.matrix }}
