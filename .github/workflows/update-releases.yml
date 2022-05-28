@@ -24,59 +24,78 @@ jobs:
       - name: Fetch asterisk releases
         shell: bash
         run: |
-          function fetch() {
-            declare -a URLS=("${!1}")
-            local ASTERISK_RELEASES=""
-
-            for URL in "${URLS[@]}"; do
-              _ASTERISK_RELEASES="$( \
-                curl \
-                  --silent \
-                  --location \
-                  --connect-timeout 5 \
-                  --max-time 10 \
-                  --retry 5 \
-                  --retry-delay 0 \
-                  --retry-max-time 40 \
-                  "${URL}" \
-                | grep '<a href="asterisk.*.tar.gz">' \
-                | grep -v '\-patch\|\-addons\|\-sounds' \
-                | awk -F '</td><td>|">asterisk' '{print $2}' \
-                | awk -F '"' '{print $NF}' \
-                | awk -F 'asterisk-certified-' '{print $NF}' \
-                | awk -F 'asterisk-' '{print $NF}' \
-                | awk -F '.tar.gz' '{print $1}' \
-              )"
-              ASTERISK_RELEASES="$(echo -en "${ASTERISK_RELEASES}\n${_ASTERISK_RELEASES}")"
-            done
-
-            unset URLS
-
-            echo -en "${ASTERISK_RELEASES}" | sort --unique
-          }
+          set -ueox pipefail
 
           URLS=( \
             http://downloads.asterisk.org/pub/telephony/asterisk/releases/ \
             http://downloads.asterisk.org/pub/telephony/asterisk/ \
             http://downloads.asterisk.org/pub/telephony/asterisk/old-releases/ \
           )
-          ASTERISK_RELEASES="$(fetch URLS[@])"
+
+          ASTERISK_RELEASES=""
+          for URL in "${URLS[@]}"; do
+            _ASTERISK_RELEASES="$( \
+              curl \
+                --silent \
+                --location \
+                --connect-timeout 5 \
+                --max-time 10 \
+                --retry 5 \
+                --retry-delay 0 \
+                --retry-max-time 40 \
+                "${URL}" \
+              | grep '<a href="asterisk.*.tar.gz">' \
+              | grep -v '\-patch\|\-addons\|\-sounds' \
+              | awk -F '</td><td>|">asterisk' '{print $2}' \
+              | awk -F '"' '{print $NF}' \
+              | awk -F 'asterisk-' '{print $NF}' \
+              | awk -F '.tar.gz' '{print $1}' \
+            )"
+            ASTERISK_RELEASES="$(echo -en "${ASTERISK_RELEASES}\n${_ASTERISK_RELEASES}")"
+          done
+
           ASTERISK_RELEASES="$( \
             echo -en "${ASTERISK_RELEASES}" \
+            | sort --unique \
             | sort --field-separator='.' --key=1,1n  --key=2,2n --key=3,3n --key=4,4n \
           )"
+
           echo -en "${ASTERISK_RELEASES}" > ./asterisk-releases.txt
 
           URLS=( \
             http://downloads.asterisk.org/pub/telephony/certified-asterisk/ \
             http://downloads.asterisk.org/pub/telephony/certified-asterisk/releases/ \
           )
-          ASTERISK_CERTIFIED_RELEASES="$(fetch URLS[@])"
+
+          ASTERISK_RELEASES=""
+          for URL in "${URLS[@]}"; do
+            _ASTERISK_RELEASES="$( \
+              curl \
+                --silent \
+                --location \
+                --connect-timeout 5 \
+                --max-time 10 \
+                --retry 5 \
+                --retry-delay 0 \
+                --retry-max-time 40 \
+                "${URL}" \
+              | grep '<a href="asterisk.*.tar.gz">' \
+              | grep -v '\-patch\|\-addons\|\-sounds' \
+              | awk -F '</td><td>|">asterisk' '{print $2}' \
+              | awk -F '"' '{print $NF}' \
+              | awk -F 'asterisk-' '{print $NF}' \
+              | awk -F '.tar.gz' '{print $1}' \
+            )"
+            ASTERISK_RELEASES="$(echo -en "${ASTERISK_RELEASES}\n${_ASTERISK_RELEASES}")"
+          done
+
           ASTERISK_CERTIFIED_RELEASES="$( \
-            echo -en "${ASTERISK_CERTIFIED_RELEASES}" \
+            echo -en "${ASTERISK_RELEASES}" \
+            | sort --unique \
             | sort --field-separator='t' --key=2,1n \
             | sort --stable --field-separator='.' --key=1,1n --key=2,2n
           )"
+
           echo -en "${ASTERISK_CERTIFIED_RELEASES}" > ./asterisk-certified-releases.txt
 
       - name: Commit and push updates
