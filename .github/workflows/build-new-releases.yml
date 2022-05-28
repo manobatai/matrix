@@ -17,7 +17,10 @@ jobs:
        matrix: ${{ steps.new-releases.outputs.matrix }}
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout this repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
 
       - name: Set dynamic matrix
         id: new-releases
