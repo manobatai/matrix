@@ -26,22 +26,28 @@ jobs:
         id: new-releases
         shell: bash
         run: |
-          set -ueo pipefail
+          set -ueox pipefail
 
+          set +e
           BUILD_RELEASES="$(
             git log -p -1 ./asterisk-releases.txt \
             | grep -P '^\+\d+' \
             | sed -re 's/^\+//g'
           )"
+          set -e
 
           # JSON_MATRIX="{\"include\":[{\"run\":\"run1\"},{\"run\":\"run2\"}]}"
           # echo "::set-output name=matrix::${JSON_MATRIX}"
 
-          JSON_MATRIX="$(
-            echo -n "$BUILD_RELEASES" \
-            | tr '\n' ' ' \
-            | jq --slurp -c -R 'split(" ") | map({run: .}) | {include: .}'
-          )"
+          if [ "$BUILD_RELEASES" != "" ]; then
+            JSON_MATRIX="$(
+              echo -n "$BUILD_RELEASES" \
+              | tr '\n' ' ' \
+              | jq --slurp -c -R 'split(" ") | map({run: .}) | {include: .}'
+            )"
+          else
+            JSON_MATRIX=""
+          fi
 
           echo "::set-output name=matrix::${JSON_MATRIX}"
 
@@ -54,8 +60,9 @@ jobs:
           echo "=================================================="
           echo "$JSON_MATRIX" | jq
 
-  # build:
-  #   needs: new-releases
-  #   uses: ./.github/workflows/build-asterisk.yml
-  #   with:
-  #     releases: ${{ needs.new-releases.outputs.matrix }}
+  build:
+    needs: new-releases
+    if: ${{ needs.new-releases.outputs.matrix != '' }}
+    uses: ./.github/workflows/build-asterisk.yml
+    with:
+      releases: ${{ needs.new-releases.outputs.matrix }}
