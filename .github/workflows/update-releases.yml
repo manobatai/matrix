@@ -1,0 +1,103 @@
+name: Update Asterisk releases lists
+
+on:
+  workflow_dispatch:
+
+  push:
+    paths:
+      - .github/workflows/update-releases.yml
+
+  schedule:
+    - cron:  '0 20 * * *'
+
+jobs:
+  update-releases:
+    timeout-minutes: 5
+    runs-on: ubuntu-20.04
+
+    steps:
+      # have to checkout with token in order to push later
+      - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PAT_GITHUB_TOKEN }}
+
+      - name: Fetch asterisk releases
+        shell: bash
+        run: |
+          set -ueo pipefail
+
+          fetch() {
+            declare -a URLS=("${!1}")
+            local ASTERISK_RELEASES=""
+
+            for URL in "${URLS[@]}"; do
+              _ASTERISK_RELEASES="$( \
+                curl \
+                  --silent \
+                  --location \
+                  --connect-timeout 5 \
+                  --max-time 10 \
+                  --retry 5 \
+                  --retry-delay 0 \
+                  --retry-max-time 40 \
+                  "${URL}" \
+                | grep '<a href="asterisk.*.tar.gz">' \
+                | grep -v '\-patch\|\-addons\|\-sounds' \
+                | awk -F '</td><td>|">asterisk' '{print $2}' \
+                | awk -F '"' '{print $NF}' \
+                | awk -F 'asterisk-certified-' '{print $NF}' \
+                | awk -F 'asterisk-' '{print $NF}' \
+                | awk -F '.tar.gz' '{print $1}' \
+              )"
+              ASTERISK_RELEASES="$(echo -en "${ASTERISK_RELEASES}\n${_ASTERISK_RELEASES}")"
+            done
+
+            unset URLS
+
+            ASTERISK_RELEASES="$(echo -en "${ASTERISK_RELEASES}" | sort --unique)"
+            echo -en "$ASTERISK_RELEASES"
+          }
+
+          URLS=( \
+            http://downloads.asterisk.org/pub/telephony/asterisk/releases/ \
+            http://downloads.asterisk.org/pub/telephony/asterisk/ \
+            http://downloads.asterisk.org/pub/telephony/asterisk/old-releases/ \
+          )
+          ASTERISK_RELEASES="$(fetch URLS[@])"
+          ASTERISK_RELEASES="$( \
+            echo -en "${ASTERISK_RELEASES}" \
+            | sort --field-separator='.' --key=1,1n  --key=2,2n --key=3,3n --key=4,4n \
+          )"
+          echo -en "${ASTERISK_RELEASES}" > ./asterisk-releases.txt
+
+          URLS=( \
+            http://downloads.asterisk.org/pub/telephony/certified-asterisk/ \
+            http://downloads.asterisk.org/pub/telephony/certified-asterisk/releases/ \
+          )
+          ASTERISK_CERTIFIED_RELEASES="$( \
+            echo -en "${ASTERISK_CERTIFIED_RELEASES}" \
+            | sort --field-separator='t' --key=2,1n \
+            | sort --stable --field-separator='.' --key=1,1n --key=2,2n
+          )"
+          echo -e "${ASTERISK_CERTIFIED_RELEASES}" | sort -u > ./asterisk-certified-releases.txt
+
+      - name: Commit and push updates
+        shell: bash
+        run: |
+          set -ueo pipefail
+
+          if [ "$(git status -s)" != "" ]; then
+            git config user.email "github-actions@users.noreply.github.com"
+            git config user.name "github-actions[bot]"
+
+            git add ./asterisk-releases.txt
+            git add ./asterisk-certified-releases.txt
+
+            git commit \
+              --all \
+              --message "[$(date '+%Y-%m-%d %H:%M')] automatic update of asterisk release lists"
+
+            git push
+          else
+            echo "Nothing to push, no updates"
+          fi

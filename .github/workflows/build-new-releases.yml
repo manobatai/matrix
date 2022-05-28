@@ -47,9 +47,12 @@ jobs:
 
           echo "Continue to build following Asterisk PBX releases:"
           echo "=================================================="
-          echo -en "$BUILD_RELEASES"
+          echo -e "$BUILD_RELEASES"
+          echo
+          echo
+          echo "JSON payload:"
           echo "=================================================="
-          echo -en "$JSON_MATRIX" | jq
+          echo "$JSON_MATRIX" | jq
 
   # build:
   #   needs: new-releases
