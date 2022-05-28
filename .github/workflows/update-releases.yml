@@ -24,7 +24,7 @@ jobs:
       - name: Fetch asterisk releases
         shell: bash
         run: |
-          set -ueo pipefail
+          set -ueox pipefail
 
           fetch() {
             set +u
@@ -56,8 +56,7 @@ jobs:
 
             unset URLS
 
-            ASTERISK_RELEASES="$(echo -en "${ASTERISK_RELEASES}" | sort --unique)"
-            echo -en "$ASTERISK_RELEASES"
+            echo -en "${ASTERISK_RELEASES}" | sort --unique
           }
 
           URLS=( \
@@ -82,7 +81,7 @@ jobs:
             | sort --field-separator='t' --key=2,1n \
             | sort --stable --field-separator='.' --key=1,1n --key=2,2n
           )"
-          echo -e "${ASTERISK_CERTIFIED_RELEASES}" | sort -u > ./asterisk-certified-releases.txt
+          echo -en "${ASTERISK_CERTIFIED_RELEASES}" > ./asterisk-certified-releases.txt
 
       - name: Commit and push updates
         shell: bash
