@@ -1,17 +1,17 @@
-name: Build Asterisk for every major release
+name: Build recent Asterisk releases
 
 on: push
 
 jobs:
-  discover_asterisk_releases:
-    name: Set dynamic matrix based on Asterisk major releases
+  releases:
+    name: Discover major Asterisk releases
     runs-on: ubuntu-latest
     outputs:
-       matrix: ${{ steps.discover_asterisk_releases.outputs.matrix }}
+       matrix: ${{ steps.releases.outputs.matrix }}
 
     steps:
       - name: Set dynamic matrix
-        id: discover_asterisk_releases
+        id: releases
         shell: bash
         run: |
           set -ueo pipefail
@@ -94,13 +94,15 @@ jobs:
           echo "::set-output name=matrix::${JSON_MATRIX}"
 
   build:
-    needs: discover_asterisk_releases
+    needs: releases
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 64
       fail-fast: false
-      matrix: ${{ fromJson(needs.discover_asterisk_releases.outputs.matrix) }}
+      matrix: ${{ fromJson(needs.releases.outputs.matrix) }}
 
     steps:
-    - run: echo "Building asterisk-${{ matrix.run }}"
-    - run: date
+      - uses: ./.github/workflows/build-asterisk.yml
+        with:
+          release: ${{ matrix.run }}
+      - run: date

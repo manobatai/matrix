@@ -1,0 +1,84 @@
+name: Build Asterisk PBX
+
+on:
+  workflow_call:
+    inputs:
+      relsease:
+        required: true
+        type: string
+
+jobs:
+  build-asterisk:
+    name: Build Asterisk PBX ${{ inputs.release }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Create docker buildx instance
+        id: buildx
+        shell: bash
+        run: |
+          set -ueox pipefail
+          echo "::set-output name=value::$(docker buildx create)"
+
+      - name: Build Astersik PBX
+        shell: bash
+        run: |
+          set -ueox pipefail
+
+          cd debian
+
+          function build() {
+          }
+
+          if [ "${{ inputs.release }}" = "1.2" ]; then
+            DEBIAN_RELEASE="jessie-slim"
+            ASTERISK_VERSION="1.2.40"
+            ASTERISK_ADDONS_VERSION="1.2.9"
+            build "$DEBIAN_RELEASE" "$ASTERISK_VERSION" "$ASTERISK_ADDONS_VERSION"
+            echo "Building Asterisk PBX ${{ inputs.release }}"
+          elif [ "${{ inputs.release }}" = "1.4" ]; then
+            DEBIAN_RELEASE="jessie-slim"
+            ASTERISK_VERSION="1.4.44"
+            ASTERISK_ADDONS_VERSION="1.4.13"
+            echo "Building Asterisk PBX ${{ inputs.release }}"
+          elif [ "${{ inputs.release }}" = "1.6" ]; then
+            DEBIAN_RELEASE="jessie-slim"
+            ASTERISK_VERSION="1.6.2.24"
+            ASTERISK_ADDONS_VERSION="1.6.2.4"
+            echo "Building Asterisk PBX ${{ inputs.release }}"
+          elif [ "${{ inputs.release }}" = "1.8" ]; then
+            DEBIAN_RELEASE="jessie-slim"
+            ASTERISK_VERSION="1.8.32.3"
+            echo "Building Asterisk PBX ${{ inputs.release }}"
+          elif [ "${{ inputs.release }}" = "10" ]; then
+            echo "Building Asterisk PBX ${{ inputs.release }}"
+          elif [ "${{ inputs.release }}" = "11" ]; then
+            echo "Building Asterisk PBX ${{ inputs.release }}"
+          elif [ "${{ inputs.release }}" = "12" ]; then
+            echo "Building Asterisk PBX ${{ inputs.release }}"
+          elif [ "${{ inputs.release }}" = "13" ]; then
+            echo "Building Asterisk PBX ${{ inputs.release }}"
+          elif [ "${{ inputs.release }}" = "14" ]; then
+            echo "Building Asterisk PBX ${{ inputs.release }}"
+          elif [ "${{ inputs.release }}" = "15" ]; then
+            echo "Building Asterisk PBX ${{ inputs.release }}"
+          elif [ "${{ inputs.release }}" = "16" ]; then
+            echo "Building Asterisk PBX ${{ inputs.release }}"
+          elif [ "${{ inputs.release }}" = "17" ]; then
+            echo "Building Asterisk PBX ${{ inputs.release }}"
+          elif [ "${{ inputs.release }}" = "18" ]; then
+            echo "Building Asterisk PBX ${{ inputs.release }}"
+          elif [ "${{ inputs.release }}" = "19" ]; then
+            echo "Building Asterisk PBX ${{ inputs.release }}"
+          else
+            echo "unsupported version"
+            exit 1
+          fi
+
+      - name: Remove docker buildx instance
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          BUILDX="${{ steps.buildx.outputs.value }}"
+          [ "${BUILDX}" != "" ] && docker buildx rm "${BUILDX}"
