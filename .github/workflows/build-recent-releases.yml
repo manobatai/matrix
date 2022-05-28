@@ -100,7 +100,13 @@ jobs:
       max-parallel: 64
       fail-fast: false
       matrix: ${{ fromJson(needs.releases.outputs.matrix) }}
-
     uses: ./.github/workflows/build-asterisk.yml
-    with:
-      release: ${{ matrix.run }}
+
+    # steps:
+    #   - uses: actions/checkout@v3
+    #   - run: find ./.github/
+    #   - uses: ./.github/workflows/build-asterisk.yml
+    #   # - uses: manobatai/matrix/.github/workflows/build-asterisk.yml@master
+    #     with:
+    #       release: ${{ matrix.run }}
+    #   - run: date
