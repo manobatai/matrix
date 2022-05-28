@@ -27,7 +27,9 @@ jobs:
           set -ueo pipefail
 
           fetch() {
+            set +u
             declare -a URLS=("${!1}")
+            set -u
             local ASTERISK_RELEASES=""
 
             for URL in "${URLS[@]}"; do
