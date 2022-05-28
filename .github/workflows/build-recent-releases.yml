@@ -97,4 +97,4 @@ jobs:
     needs: releases
     uses: ./.github/workflows/build-asterisk.yml
     with:
-      matrix: ${{ needs.releases.outputs.matrix }}
+      releases: ${{ needs.releases.outputs.matrix }}
