@@ -64,13 +64,13 @@ jobs:
             echo "Building Asterisk PBX $RELEASE"
           elif [[ "$RELEASE" =~ ^15\. ]]; then
             echo "Building Asterisk PBX $RELEASE"
-          elif [[ "$RELEASE" =~ ^16\. ]]; then
+          elif [[ "$RELEASE" =~ ^16(\.|-). ]]; then
             echo "Building Asterisk PBX $RELEASE"
-          elif [[ "$RELEASE" =~ ^17\. ]]; then
+          elif [[ "$RELEASE" =~ ^17(\.|-). ]]; then
             echo "Building Asterisk PBX $RELEASE"
-          elif [[ "$RELEASE" =~ ^18\. ]]; then
+          elif [[ "$RELEASE" =~ ^18(\.|-). ]]; then
             echo "Building Asterisk PBX $RELEASE"
-          elif [[ "$RELEASE" =~ ^19\. ]]; then
+          elif [[ "$RELEASE" =~ ^19(\.|-). ]]; then
             echo "Building Asterisk PBX $RELEASE"
           else
             echo "Unsupported release"
