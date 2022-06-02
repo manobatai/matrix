@@ -26,6 +26,15 @@ jobs:
         run: |
           set -ueo pipefail
 
+          CURL_OPTIONS="--silent \
+            --location \
+            --connect-timeout 5 \
+            --max-time 10 \
+            --retry 5 \
+            --retry-delay 0 \
+            --retry-max-time 40 \
+          "
+
           URLS=( \
             http://downloads.asterisk.org/pub/telephony/asterisk/releases/ \
             http://downloads.asterisk.org/pub/telephony/asterisk/ \
@@ -35,15 +44,7 @@ jobs:
           ASTERISK_RELEASES=""
           for URL in "${URLS[@]}"; do
             _ASTERISK_RELEASES="$( \
-              curl \
-                --silent \
-                --location \
-                --connect-timeout 5 \
-                --max-time 10 \
-                --retry 5 \
-                --retry-delay 0 \
-                --retry-max-time 40 \
-                "${URL}" \
+              curl $CURL_OPTIONS $URL \
               | grep '<a href="asterisk.*.tar.gz">' \
               | grep -v '\-patch\|\-addons\|\-sounds' \
               | awk -F '</td><td>|">asterisk' '{print $2}' \
@@ -51,7 +52,7 @@ jobs:
               | awk -F 'asterisk-' '{print $NF}' \
               | awk -F '.tar.gz' '{print $1}' \
             )"
-            ASTERISK_RELEASES="$(echo -en "${ASTERISK_RELEASES}\n${_ASTERISK_RELEASES}")"
+            ASTERISK_RELEASES+="${_ASTERISK_RELEASES}\n"
           done
 
           ASTERISK_RELEASES="$( \
@@ -70,15 +71,7 @@ jobs:
           ASTERISK_RELEASES=""
           for URL in "${URLS[@]}"; do
             _ASTERISK_RELEASES="$( \
-              curl \
-                --silent \
-                --location \
-                --connect-timeout 5 \
-                --max-time 10 \
-                --retry 5 \
-                --retry-delay 0 \
-                --retry-max-time 40 \
-                "${URL}" \
+              curl $CURL_OPTIONS $URL \
               | grep '<a href="asterisk.*.tar.gz">' \
               | grep -v '\-patch\|\-addons\|\-sounds' \
               | awk -F '</td><td>|">asterisk' '{print $2}' \
@@ -86,7 +79,7 @@ jobs:
               | awk -F 'asterisk-' '{print $NF}' \
               | awk -F '.tar.gz' '{print $1}' \
             )"
-            ASTERISK_RELEASES="$(echo -en "${ASTERISK_RELEASES}\n${_ASTERISK_RELEASES}")"
+            ASTERISK_RELEASES+="${_ASTERISK_RELEASES}\n"
           done
 
           ASTERISK_CERTIFIED_RELEASES="$( \
@@ -97,6 +90,46 @@ jobs:
           )"
 
           echo -en "${ASTERISK_CERTIFIED_RELEASES}" > ./asterisk-certified-releases.txt
+
+          TOKEN_URI="https://auth.docker.io/token"
+          LIST_URI="https://registry-1.docker.io/v2/###IMAGE###/tags/list"
+
+          IMAGE='library/alpine'
+          IMAGE_GLIBC='frolvlad/alpine-glibc'
+
+          SCOPE="scope=repository:${IMAGE}:pull&scope=repository:${IMAGE_GLIBC}:pull&"
+
+          TOKEN=$(curl -Ss "${TOKEN_URI}?service=registry.docker.io&${SCOPE}" | jq -r .token)
+
+          (
+            THIS_URI=$(echo -n "${LIST_URI}" | sed -e "s^###IMAGE###^${IMAGE}^")
+            curl -SsL \
+              -H "Accept: application/json" \
+              -H "Authorization: Bearer $TOKEN" "${THIS_URI}" \
+              | jq -M -r '.tags[]' \
+              | grep -P '^\d+\.\d+$' \
+              | sort \
+              | sort --stable --field-separator='.' --key=1,1n --key=2,2n
+            echo "latest"
+            echo "edge"
+          ) \
+          | sed -re "s/^/alpine:/g" \
+          > ./docker-alpine-tags.txt
+
+          (
+            THIS_URI=$(echo -n "${LIST_URI}" | sed -e "s^###IMAGE###^${IMAGE_GLIBC}^")
+            curl -Ss \
+              -H "Accept: application/json" \
+              -H "Authorization: Bearer $TOKEN" "${THIS_URI}" \
+              | jq -M -r '.tags[]' \
+              | grep -P '^alpine-\d+\.\d+$' \
+              | sort --stable --field-separator='-' --key=1,1n \
+              | sort --stable --field-separator='.' --key=1,1n --key=2,2n
+            echo "latest"
+            echo "edge"
+          ) \
+          | sed -re "s/^/frolvlad\/alpine-glibc:/g" \
+          > ./docker-alpine-glibc-tags.txt
 
       - name: Commit and push updates
         shell: bash
