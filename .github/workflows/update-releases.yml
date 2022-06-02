@@ -1,4 +1,4 @@
-name: Update Asterisk releases lists
+name: Update releases lists
 
 on:
   workflow_dispatch:
@@ -142,10 +142,12 @@ jobs:
 
             git add ./asterisk-releases.txt
             git add ./asterisk-certified-releases.txt
+            git add ./docker-alpine-tags.txt
+            git add ./docker-alpine-glibc-tags.txt
 
             git commit \
               --all \
-              --message "[$(date '+%Y-%m-%d %H:%M')] automatic update of asterisk release lists"
+              --message "[$(date '+%Y-%m-%d %H:%M')] automatic update of release lists"
 
             git push
           else
