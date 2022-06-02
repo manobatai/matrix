@@ -1,0 +1,105 @@
+name: Build alpine-based asterisk images
+
+on:
+  workflow_dispatch:
+
+  push:
+    paths:
+      - .github/workflows/generate-alpine-images.yml
+      - "alpine/*"
+
+  schedule:
+    #         ┌───────────── minute (0 - 59)
+    #         │ ┌───────────── hour (0 - 23)
+    #         │ │  ┌───────────── day of the month (1 - 31)
+    #         │ │  │         ┌───────────── month (1 - 12 or JAN-DEC)
+    #         │ │  │         │ ┌───────────── day of the week (0 - 6 or SUN-SAT)
+    #         │ │  │         │ │
+    #         │ │  │         │ │
+    #         │ │  │         │ │
+    #         * *  *         * *
+    - cron:  '0 19 1-7,15-21 * 3' # first and third wednesdays of the month
+
+jobs:
+  alpine-tags:
+    name: Discover major Alpine linux docker tags
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+       matrix: ${{ steps.alpine-tags.outputs.matrix }}
+
+    steps:
+      - name: Set dynamic matrix
+        id: alpine-tags
+        shell: bash
+        run: |
+          set -ueo pipefail
+          TOKEN_URI="https://auth.docker.io/token"
+          LIST_URI="https://registry-1.docker.io/v2/###IMAGE###/tags/list"
+
+          IMAGE='library/alpine'
+          IMAGE_GLIBC='frolvlad/alpine-glibc'
+
+          SCOPE="scope=repository:${IMAGE}:pull&scope=repository:${IMAGE_GLIBC}:pull&"
+
+          TOKEN=$(curl -Ss "${TOKEN_URI}?service=registry.docker.io&${SCOPE}" | jq -r .token)
+
+          ALPINE_RELEASES="$(
+            (
+              THIS_URI=$(echo -n "${LIST_URI}" | sed -e "s^###IMAGE###^${IMAGE}^")
+              curl -SsL \
+                  -H "Accept: application/json" \
+                  -H "Authorization: Bearer $TOKEN" "${THIS_URI}" \
+                  | jq -M -r '.tags[]' \
+                  | grep -P '^[3]\.\d+$' \
+                  | sort \
+                  | sort --stable --field-separator='.' --key=1,1n --key=2,2n
+              echo "latest"
+              echo "edge"
+            ) \
+            | sed -re "s/^/alpine:/g"
+          )"
+
+          ALPINE_RELEASES+="\n$(
+            (
+              THIS_URI=$(echo -n "${LIST_URI}" | sed -e "s^###IMAGE###^${IMAGE_GLIBC}^")
+              curl -Ss \
+                  -H "Accept: application/json" \
+                  -H "Authorization: Bearer $TOKEN" "${THIS_URI}" \
+                  | jq -M -r '.tags[]' \
+                  | grep -P '^alpine-[3]\.\d+$' \
+                  | sort --stable --field-separator='-' --key=1,1n \
+                  | sort --stable --field-separator='.' --key=1,1n --key=2,2n
+              echo "latest"
+              echo "edge"
+            ) \
+            | sed -re "s/^/frolvlad\/alpine-glibc:/g"
+          )"
+
+          echo -e "$ALPINE_RELEASES"
+
+          # # JSON_MATRIX="{\"include\":[{\"run\":\"run1\"},{\"run\":\"run2\"}]}"
+          # # echo "::set-output name=matrix::${JSON_MATRIX}"
+
+          # JSON_MATRIX="$(
+          #   echo -n "$BUILD_RELEASES" \
+          #   | tr '\n' ' ' \
+          #   | jq --slurp -c -R 'split(" ") | map({run: .}) | {include: .}'
+          # )"
+
+          # echo "::set-output name=matrix::${JSON_MATRIX}"
+
+          # echo "Continue to build following Asterisk PBX releases:"
+          # echo "=================================================="
+          # echo -e "$BUILD_RELEASES"
+          # echo
+          # echo
+          # echo "JSON payload:"
+          # echo "=================================================="
+          # echo "$JSON_MATRIX" | jq
+
+  # build:
+  #   needs: alpine-tags
+  #   uses: ./.github/workflows/build-asterisk.yml
+  #   with:
+  #     releases: ${{ needs.alpine-tags.outputs.matrix }}

@@ -21,7 +21,7 @@ jobs:
         with:
           token: ${{ secrets.PAT_GITHUB_TOKEN }}
 
-      - name: Fetch asterisk releases
+      - name: Fetch software releases
         shell: bash
         run: |
           set -ueo pipefail
@@ -107,7 +107,7 @@ jobs:
               -H "Accept: application/json" \
               -H "Authorization: Bearer $TOKEN" "${THIS_URI}" \
               | jq -M -r '.tags[]' \
-              | grep -P '^\d+\.\d+$' \
+              | grep -P '^[3]\.\d+$' \
               | sort \
               | sort --stable --field-separator='.' --key=1,1n --key=2,2n
             echo "latest"
@@ -122,7 +122,7 @@ jobs:
               -H "Accept: application/json" \
               -H "Authorization: Bearer $TOKEN" "${THIS_URI}" \
               | jq -M -r '.tags[]' \
-              | grep -P '^alpine-\d+\.\d+$' \
+              | grep -P '^alpine-[3]\.\d+$' \
               | sort --stable --field-separator='-' --key=1,1n \
               | sort --stable --field-separator='.' --key=1,1n --key=2,2n
             echo "latest"

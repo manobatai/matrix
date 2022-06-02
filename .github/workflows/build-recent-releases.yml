@@ -39,7 +39,7 @@ jobs:
                 --retry 5 \
                 --retry-delay 0 \
                 --retry-max-time 40 \
-                "${URL}" \
+                $URL \
               | grep '<a href="asterisk.*.tar.gz">' \
               | grep -v '\-patch\|\-addons\|\-sounds' \
               | awk -F '</td><td>|">asterisk' '{print $2}' \
@@ -47,11 +47,12 @@ jobs:
               | awk -F 'asterisk-' '{print $NF}' \
               | awk -F '.tar.gz' '{print $1}' \
             )"
-            ASTERISK_RELEASES="$(echo -en "${ASTERISK_RELEASES}\n${_ASTERISK_RELEASES}")"
+            ASTERISK_RELEASES+="${_ASTERISK_RELEASES}\n"
           done
 
           ASTERISK_RELEASES="$( \
-            echo -en "${ASTERISK_RELEASES}" | sort --unique \
+            echo -en "${ASTERISK_RELEASES}" \
+            | sort --unique \
             | sort --field-separator='.' --key=1,1n  --key=2,2n --key=3,3n --key=4,4n \
           )"
 
