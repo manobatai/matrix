@@ -10,6 +10,8 @@ frolvlad/alpine-glibc:alpine-3.10
 frolvlad/alpine-glibc:alpine-3.11
 frolvlad/alpine-glibc:alpine-3.12
 frolvlad/alpine-glibc:alpine-3.13
+frolvlad/alpine-glibc:alpine-3.14
+frolvlad/alpine-glibc:alpine-3.15
 frolvlad/alpine-glibc:alpine-3.16
 frolvlad/alpine-glibc:latest
 frolvlad/alpine-glibc:edge
