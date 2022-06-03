@@ -1,4 +1,4 @@
-name: Generate alpine-based Asterisk images
+name: Find & build recent Alpine-based Asterisk images
 
 on:
   workflow_dispatch:
@@ -22,7 +22,7 @@ on:
 
 jobs:
   tags:
-    name: Discover major Alpine linux docker tags
+    name: Discover Alpine linux docker tags
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:

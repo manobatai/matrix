@@ -1,3 +1,4 @@
+name: Process new Alpine docker tags
 on:
   workflow_dispatch:
 
@@ -59,9 +60,10 @@ jobs:
           echo "==============================================================="
           echo "$JSON_MATRIX" | jq
 
-  build:
+  build-images:
+    name: Build Alpine-based Asterisk images
     needs: tags
     if: ${{ needs.tags.outputs.matrix != '' }}
-    uses: ./.github/workflows/generate-alpine-images.yml
+    uses: ./.github/workflows/build-alpine-images.yml
     with:
       docker-tags: ${{ needs.tags.outputs.matrix }}

@@ -1,4 +1,4 @@
-name: Build new Asterisk releases
+name: Process new Asterisk releases
 
 on:
   workflow_dispatch:

@@ -1,4 +1,4 @@
-name: Build recent Asterisk releases
+name: Find & build recent Asterisk releases
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ on:
 
 jobs:
   releases:
-    name: Discover major Asterisk releases
+    name: Discover Asterisk releases
     runs-on: ubuntu-20.04
     timeout-minutes: 5
     outputs:
