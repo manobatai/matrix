@@ -1,11 +1,11 @@
-name: Update releases lists
+name: Discover new software releases
 
 on:
   workflow_dispatch:
 
   push:
     paths:
-      - .github/workflows/update-releases.yml
+      - .github/workflows/discover-releases.yml
 
   schedule:
     - cron:  '0 20 * * *'
