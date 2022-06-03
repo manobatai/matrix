@@ -1,5 +1,3 @@
-name: Generate new alpine-based Asterisk images
-
 on:
   workflow_dispatch:
 
@@ -7,11 +5,11 @@ on:
     paths:
       - .github/workflows/process-alpine-tags.yml
       - 'docker-alpine-tags.txt'
-      - 'docker-alpine-glibc-tags.txtt'
+      - 'docker-alpine-glibc-tags.txt'
 
 jobs:
   tags:
-    name: Discover new Asterisk releases
+    name: Discover new docker tags
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
@@ -20,6 +18,8 @@ jobs:
     steps:
       - name: Checkout this repository
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Set dynamic matrix
         id: tags

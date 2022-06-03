@@ -11,7 +11,7 @@ on:
 jobs:
   releases:
     name: Discover new Asterisk releases
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
        matrix: ${{ steps.releases.outputs.matrix }}
