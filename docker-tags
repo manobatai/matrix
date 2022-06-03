@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+
+# Source:
+# https://gist.github.com/robv8r/fa66f5e0fdf001f425fe9facf2db6d49?permalink_comment_id=3896063#gistcomment-3896063
+
+
+# Gets all tags for a given docker image.
+
+# Dependencies: curl, jq
+
+# Examples:
+
+# retrieve all tags for a single library
+# docker-tags "library/redis"
+
+# retrieve all tags for multiple libraries
+# docker-tags "library/mongo" "library/redis"
+
+token_uri="https://auth.docker.io/token"
+list_uri="https://registry-1.docker.io/v2/###IMAGE###/tags/list"
+
+images=($@)
+
+scope=''
+for image in "${images[@]}"; do
+    scope+="scope=repository:${image}:pull&"
+done
+
+token=$( curl -Ss "${token_uri}?service=registry.docker.io&${scope}" | jq -r .token )
+
+for image in "${images[@]}"; do
+    this_uri=$( echo -n "${list_uri}" | sed -e "s^###IMAGE###^${image}^" )
+    curl -Ss -H "Accept: application/json" -H "Authorization: Bearer $token" "${this_uri}" | jq .
+done
+

@@ -5,16 +5,16 @@ on:
 
   push:
     paths:
-      - .github/workflows/build-new-releases.yml
+      - .github/workflows/process-asterisk-releases.yml
       - 'asterisk-releases.txt'
 
 jobs:
-  new-releases:
+  releases:
     name: Discover new Asterisk releases
     runs-on: ubuntu-20.04
     timeout-minutes: 5
     outputs:
-       matrix: ${{ steps.new-releases.outputs.matrix }}
+       matrix: ${{ steps.releases.outputs.matrix }}
 
     steps:
       - name: Checkout this repository
@@ -23,7 +23,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set dynamic matrix
-        id: new-releases
+        id: releases
         shell: bash
         run: |
           set -ueox pipefail
@@ -61,8 +61,8 @@ jobs:
           echo "$JSON_MATRIX" | jq
 
   build:
-    needs: new-releases
-    if: ${{ needs.new-releases.outputs.matrix != '' }}
+    needs: releases
+    if: ${{ needs.releases.outputs.matrix != '' }}
     uses: ./.github/workflows/build-asterisk.yml
     with:
-      releases: ${{ needs.new-releases.outputs.matrix }}
+      releases: ${{ needs.releases.outputs.matrix }}

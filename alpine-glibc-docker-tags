@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+token_uri="https://auth.docker.io/token"
+list_uri="https://registry-1.docker.io/v2/###IMAGE###/tags/list"
+
+image='frolvlad/alpine-glibc'
+scope="scope=repository:${image}:pull&"
+
+token=$( curl -Ss "${token_uri}?service=registry.docker.io&${scope}" | jq -r .token )
+
+this_uri=$( echo -n "${list_uri}" | sed -e "s^###IMAGE###^${image}^" )
+curl -Ss \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $token" "${this_uri}" \
+    | jq -M -r '.tags[]' \
+    | grep -P '(^alpine-\d+\.\d+$|^edge|^latest)'
+

@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+
+TOKEN_URI="https://auth.docker.io/token"
+LIST_URI="https://registry-1.docker.io/v2/###IMAGE###/tags/list"
+
+IMAGE='library/alpine'
+IMAGE_GLIBC='frolvlad/alpine-glibc'
+
+SCOPE="scope=repository:${IMAGE}:pull&scope=repository:${IMAGE_GLIBC}:pull&"
+
+TOKEN=$(curl -Ss "${TOKEN_URI}?service=registry.docker.io&${SCOPE}" | jq -r .token)
+
+ALPINE_RELEASES="$(
+    (
+        THIS_URI=$(echo -n "${LIST_URI}" | sed -e "s^###IMAGE###^${IMAGE}^")
+        curl -SsL \
+            -H "Accept: application/json" \
+            -H "Authorization: Bearer $TOKEN" "${THIS_URI}" \
+            | jq -M -r '.tags[]' \
+            | grep -P '^[3]\.\d+$' \
+            | sort \
+            | sort --stable --field-separator='.' --key=1,1n --key=2,2n
+        echo "latest"
+        echo "edge"
+    ) \
+    | sed -re "s/^/alpine:/g"
+)"
+
+ALPINE_RELEASES+="\n$(
+    (
+        THIS_URI=$(echo -n "${LIST_URI}" | sed -e "s^###IMAGE###^${IMAGE_GLIBC}^")
+        curl -Ss \
+            -H "Accept: application/json" \
+            -H "Authorization: Bearer $TOKEN" "${THIS_URI}" \
+            | jq -M -r '.tags[]' \
+            | grep -P '^alpine-[3]\.\d+$' \
+            | sort --stable --field-separator='-' --key=1,1n \
+            | sort --stable --field-separator='.' --key=1,1n --key=2,2n
+        echo "latest"
+        echo "edge"
+    ) \
+    | sed -re "s/^/frolvlad\/alpine-glibc:/g"
+)"
+
+echo -e "$ALPINE_RELEASES"

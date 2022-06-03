@@ -5,19 +5,19 @@ on:
 
   push:
     paths:
-      - .github/workflows/build-recent-releases.yml
+      - .github/workflows/find-asterisk-releases.yml
 
 jobs:
-  recent-releases:
+  releases:
     name: Discover major Asterisk releases
     runs-on: ubuntu-20.04
     timeout-minutes: 5
     outputs:
-       matrix: ${{ steps.recent-releases.outputs.matrix }}
+       matrix: ${{ steps.releases.outputs.matrix }}
 
     steps:
       - name: Set dynamic matrix
-        id: recent-releases
+        id: releases
         shell: bash
         run: |
           set -ueo pipefail
@@ -110,7 +110,7 @@ jobs:
           echo "$JSON_MATRIX" | jq
 
   build:
-    needs: recent-releases
+    needs: releases
     uses: ./.github/workflows/build-asterisk.yml
     with:
-      releases: ${{ needs.recent-releases.outputs.matrix }}
+      releases: ${{ needs.releases.outputs.matrix }}

@@ -1,0 +1,67 @@
+name: Generate new alpine-based Asterisk images
+
+on:
+  workflow_dispatch:
+
+  push:
+    paths:
+      - .github/workflows/process-alpine-tags.yml
+      - 'docker-alpine-tags.txt'
+      - 'docker-alpine-glibc-tags.txtt'
+
+jobs:
+  tags:
+    name: Discover new Asterisk releases
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+       matrix: ${{ steps.tags.outputs.matrix }}
+
+    steps:
+      - name: Checkout this repository
+        uses: actions/checkout@v3
+
+      - name: Set dynamic matrix
+        id: tags
+        shell: bash
+        run: |
+          set -ueox pipefail
+
+          set +e
+          DOCKER_TAGS="$(
+            (
+              git log -p -1 ./docker-alpine-tags.txt && \
+              git log -p -1 ./docker-alpine-glibc-tags.txt
+            ) \
+            | grep -P '^\+\w+' \
+            | sed -re 's/^\+//g'
+          )"
+          set -e
+
+          if [ "$DOCKER_TAGS" != "" ]; then
+            JSON_MATRIX="$(
+              echo -n "$DOCKER_TAGS" \
+              | tr '\n' ' ' \
+              | jq --slurp -c -R 'split(" ") | map({run: .}) | {include: .}'
+            )"
+          else
+            JSON_MATRIX=""
+          fi
+
+          echo "::set-output name=matrix::${JSON_MATRIX}"
+
+          echo "Continue to build Asterisk imags with followup alpine versions:"
+          echo "==============================================================="
+          echo -e "$DOCKER_TAGS"
+          echo
+          echo
+          echo "JSON payload:"
+          echo "==============================================================="
+          echo "$JSON_MATRIX" | jq
+
+  build:
+    needs: tags
+    if: ${{ needs.tags.outputs.matrix != '' }}
+    uses: ./.github/workflows/generate-alpine-images.yml
+    with:
+      docker-tags: ${{ needs.tags.outputs.matrix }}
