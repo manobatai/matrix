@@ -109,12 +109,12 @@ jobs:
 
   generate-alpine-images:
     needs: tags
-    uses: ./.github/workflows/generate-alpine-images.yml
+    uses: ./.github/workflows/build-alpine-images.yml
     with:
       docker-tags: ${{ needs.tags.outputs.alpine }}
 
   generate-alpine-glibc-images:
     needs: tags
-    uses: ./.github/workflows/generate-alpine-images.yml
+    uses: ./.github/workflows/build-alpine-images.yml
     with:
       docker-tags: ${{ needs.tags.outputs.alpine-glibc }}
