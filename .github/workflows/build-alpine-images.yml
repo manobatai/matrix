@@ -81,7 +81,7 @@ jobs:
                 | grep 'amd64\|arm\|386' \
                 | xargs \
                 | sed -e "s/ /,/g"
-              )"
+              )" || :
 
               # additional tags
               TAGS="--tag andrius/asterisk:${TAG_PREFIX}${ASTERISK_VERSION}"
