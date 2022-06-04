@@ -67,4 +67,6 @@ jobs:
     uses: ./.github/workflows/build-alpine-images.yml
     with:
       docker-tags: ${{ needs.tags.outputs.matrix }}
-    secrets: inherit
+    secrets:
+      dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
+      dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}

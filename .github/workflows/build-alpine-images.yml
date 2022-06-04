@@ -6,6 +6,12 @@ on:
       docker-tags:
         required: true
         type: string
+    secrets:
+      dockerhub_username:
+        required: true
+      dockerhub_token:
+        required: true
+
 
 jobs:
   build-images:
@@ -20,18 +26,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: DEBUG STEP
-        shell: bash
-        run: |
-          set -ueox pipefail
-          echo "username: ${{ secrets.DOCKERHUB_USERNAME }}"
-          echo "password: ${{ secrets.DOCKERHUB_TOKEN }}"
-
       - name: Login to the docker registry
         uses: docker/login-action@v2
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          username: ${{ secrets.dockerhub_username }}
+          password: ${{ secrets.dockerhub_token }}
 
       - name: Create docker buildx instance
         id: buildx
