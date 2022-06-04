@@ -57,7 +57,7 @@ jobs:
           else
             # frolvlad/alpine-glibc:latest
             TAG_PREFIX="alpine-glibc-"
-            TAG="${TAG_PREFIX}$(echo -n "${BASEIMAGE_TAG}" | awk -F '-' '{print $NF}')"
+            TAG="${TAG_PREFIX}$(echo -n "${BASEIMAGE_TAG}" | awk -F ':|-' '{print $NF}')"
           fi
 
           IMAGE="andrius/asterisk:${TAG}"
