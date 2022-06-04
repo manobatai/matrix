@@ -53,7 +53,7 @@ jobs:
           if [[ "$BASEIMAGE_TAG" =~ ^alpine: ]]; then
             # alpine:3.12
             TAG_PREFIX="alpine-"
-            TAG="$(echo -n "${BASEIMAGE_TAG}" | awk -F ':' '{print $NF}')"
+            TAG="${TAG_PREFIX}$(echo -n "${BASEIMAGE_TAG}" | awk -F ':' '{print $NF}')"
           else
             # frolvlad/alpine-glibc:latest
             TAG_PREFIX="alpine-glibc-"
@@ -83,7 +83,7 @@ jobs:
 
               # additional tags
               TAGS="--tag andrius/asterisk:${TAG_PREFIX}${ASTERISK_VERSION}"
-              TAGS+="--tag andrius/asterisk:${TAG}-${ASTERISK_VERSION}"
+              TAGS+=" --tag andrius/asterisk:${TAG}-${ASTERISK_VERSION}"
 
               docker buildx use "${BUILDX}"
               docker buildx build --platform "${BUILDX_PLATFORMS}" --quiet --push --pull ${TAGS} --file "Dockerfile-${TAG}" .
