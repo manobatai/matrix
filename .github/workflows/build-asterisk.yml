@@ -15,8 +15,8 @@ jobs:
     strategy:
       max-parallel: 64
       fail-fast: false
-      # matrix: ${{ fromJson(inputs.releases) }}
-      matrix: ${{ fromJson(github.event.inputs.releases) }}
+      matrix: ${{ fromJson(inputs.releases) }}
+      # matrix: ${{ fromJson(github.event.inputs.releases) }}
 
     steps:
       - uses: actions/checkout@v3
