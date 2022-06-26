@@ -1,0 +1,14 @@
+name: Test build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-build:
+    needs: tags
+    uses: ./.github/workflows/build-asterisk.yml
+    with:
+      "releases": "{\"include\":[{\"run\":\"1.2.40\"}]}"
+    secrets:
+      dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
+      dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
