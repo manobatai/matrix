@@ -31,7 +31,7 @@ jobs:
       - name: Build Astersik PBX
         shell: bash
         run: |
-          set -ueo pipefail
+          set -ueox pipefail
 
           addons_version(){
             local ASTERISK_RELEASE="$1"
