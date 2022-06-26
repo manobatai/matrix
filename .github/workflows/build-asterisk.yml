@@ -33,6 +33,16 @@ jobs:
         run: |
           set -ueox pipefail
 
+          cd ./debian
+
+          BUILDX="${{ steps.buildx.outputs.value }}"
+          docker buildx use "${BUILDX}"
+
+          ASTERISK_VERSION="${{ matrix.run }}"
+          ASTERISK_ADDONS_VERSION=""
+          ASTERISK_OPUS_VERSION=""
+          DEBIAN_RELEASE="bullseye-slim"
+
           addons_version(){
             local ASTERISK_RELEASE="$1"
             local URL="http://downloads.asterisk.org/pub/telephony/asterisk/old-releases"
@@ -46,7 +56,7 @@ jobs:
                 --retry 5 \
                 --retry-delay 0 \
                 --retry-max-time 40 \
-                "${URL}" \
+                "$URL" \
               | grep '<a href="asterisk.*.tar.gz">' \
               | grep '\-addons' \
               | awk -F '</td><td>|">asterisk' '{print $2}' \
@@ -60,55 +70,46 @@ jobs:
             echo -en "$ASTERISK_ADDONS" | grep "^$ASTERISK_RELEASE\." | tail -n1
           }
 
-          ASTERISK_VERSION="${{ matrix.run }}"
-          ASTERISK_ADDONS_VERSION=""
-          ASTERISK_OPUS_VERSION=""
-          DEBIAN_RELEASE="bullseye-slim"
-
-          if [[ "${ASTERISK_VERSION}" =~ ^1\.2\. ]]; then
+          if [[ "$ASTERISK_VERSION" =~ ^1\.2\. ]]; then
             DEBIAN_RELEASE="jessie-slim"
-            ASTERISK_ADDONS_VERSION="$(addons_version '1.2')"}
-          elif [[ "${ASTERISK_VERSION}" =~ ^1\.4\. ]]; then
+            ASTERISK_ADDONS_VERSION="$(addons_version '1.2')"
+          elif [[ "$ASTERISK_VERSION" =~ ^1\.4\. ]]; then
             DEBIAN_RELEASE="jessie-slim"
             ASTERISK_ADDONS_VERSION="1.4.13"
-          elif [[ "${ASTERISK_VERSION}" =~ ^1\.6\. ]]; then
+          elif [[ "$ASTERISK_VERSION" =~ ^1\.6\. ]]; then
             DEBIAN_RELEASE="jessie-slim"
             ASTERISK_ADDONS_VERSION="1.6.2.4"
-          elif [[ "${ASTERISK_VERSION}" =~ ^1\.8\. ]]; then
+          elif [[ "$ASTERISK_VERSION" =~ ^1\.8\. ]]; then
             DEBIAN_RELEASE="jessie-slim"
             ASTERISK_VERSION="1.8.32.3"
-          elif [[ "${ASTERISK_VERSION}" =~ ^10\. ]]; then
-            echo "Building Asterisk PBX ${ASTERISK_VERSION}"
-          elif [[ "${ASTERISK_VERSION}" =~ ^11\. ]]; then
-            echo "Building Asterisk PBX ${ASTERISK_VERSION}"
-          elif [[ "${ASTERISK_VERSION}" =~ ^12\. ]]; then
-            echo "Building Asterisk PBX ${ASTERISK_VERSION}"
-          elif [[ "${ASTERISK_VERSION}" =~ ^13\. ]]; then
-            echo "Building Asterisk PBX ${ASTERISK_VERSION}"
-          elif [[ "${ASTERISK_VERSION}" =~ ^14\. ]]; then
-            echo "Building Asterisk PBX ${ASTERISK_VERSION}"
-          elif [[ "${ASTERISK_VERSION}" =~ ^15\. ]]; then
-            echo "Building Asterisk PBX ${ASTERISK_VERSION}"
-          elif [[ "${ASTERISK_VERSION}" =~ ^16(\.|-). ]]; then
-            echo "Building Asterisk PBX ${ASTERISK_VERSION}"
-          elif [[ "${ASTERISK_VERSION}" =~ ^17(\.|-). ]]; then
-            echo "Building Asterisk PBX ${ASTERISK_VERSION}"
-          elif [[ "${ASTERISK_VERSION}" =~ ^18(\.|-). ]]; then
-            echo "Building Asterisk PBX ${ASTERISK_VERSION}"
-          elif [[ "${ASTERISK_VERSION}" =~ ^19(\.|-). ]]; then
-            echo "Building Asterisk PBX ${ASTERISK_VERSION}"
+          elif [[ "$ASTERISK_VERSION" =~ ^10\. ]]; then
+            echo "Building Asterisk PBX $ASTERISK_VERSION"
+          elif [[ "$ASTERISK_VERSION" =~ ^11\. ]]; then
+            echo "Building Asterisk PBX $ASTERISK_VERSION"
+          elif [[ "$ASTERISK_VERSION" =~ ^12\. ]]; then
+            echo "Building Asterisk PBX $ASTERISK_VERSION"
+          elif [[ "$ASTERISK_VERSION" =~ ^13\. ]]; then
+            echo "Building Asterisk PBX $ASTERISK_VERSION"
+          elif [[ "$ASTERISK_VERSION" =~ ^14\. ]]; then
+            echo "Building Asterisk PBX $ASTERISK_VERSION"
+          elif [[ "$ASTERISK_VERSION" =~ ^15\. ]]; then
+            echo "Building Asterisk PBX $ASTERISK_VERSION"
+          elif [[ "$ASTERISK_VERSION" =~ ^16(\.|-). ]]; then
+            echo "Building Asterisk PBX $ASTERISK_VERSION"
+          elif [[ "$ASTERISK_VERSION" =~ ^17(\.|-). ]]; then
+            echo "Building Asterisk PBX $ASTERISK_VERSION"
+          elif [[ "$ASTERISK_VERSION" =~ ^18(\.|-). ]]; then
+            echo "Building Asterisk PBX $ASTERISK_VERSION"
+          elif [[ "$ASTERISK_VERSION" =~ ^19(\.|-). ]]; then
+            echo "Building Asterisk PBX $ASTERISK_VERSION"
           else
             echo "Unsupported release"
             exit 1
           fi
 
-          cd debian
-
-          docker buildx use "${BUILDX}"
-
-          BASEIMAGE_TAG="debian:${DEBIAN_RELEASE}"
+          BASEIMAGE_TAG="debian:$DEBIAN_RELEASE"
           BUILDX_PLATFORMS="$(
-            docker buildx imagetools inspect "${BASEIMAGE_TAG}" \
+            docker buildx imagetools inspect "$BASEIMAGE_TAG" \
             | grep 'Platform:' \
             | awk '{print $NF}' \
             | grep 'amd64\|arm\|386' \
@@ -117,47 +118,46 @@ jobs:
           )" || :
 
           # docker tags
-          TAGS="--tag andrius/asterisk:${ASTERISK_VERSION}"
-          TAGS+=" --tag andrius/asterisk:$(echo -n "${DEBIAN_RELEASE}" | sed -re 's/-slim$//g')-${ASTERISK_VERSION}"}
-          TAGS+=" --tag andrius/asterisk:debian-$(echo -n "${DEBIAN_RELEASE}" | sed -re 's/-slim$//g')-${ASTERISK_VERSION}"}
+          TAGS="andrius/asterisk:$ASTERISK_VERSION "
+          TAGS+="--tag andrius/asterisk:$(echo -n "$DEBIAN_RELEASE" | sed -re 's/-slim$//g')-$ASTERISK_VERSION "
+          TAGS+="--tag andrius/asterisk:debian-$(echo -n "$DEBIAN_RELEASE" | sed -re 's/-slim$//g')-$ASTERISK_VERSION "
 
           echo "ANDRIUS"
           echo "Building Asterisk PBX:"
-          echo "DEBIAN_RELEASE:          ${DEBIAN_RELEASE}"
-          echo "BUILDX_PLATFORMS:        ${BUILDX_PLATFORMS}"
-          echo "ASTERISK_VERSION:        ${ASTERISK_VERSION}"
-          echo "ASTERISK_ADDONS_VERSION: ${ASTERISK_ADDONS_VERSION}"
-          echo "ASTERISK_OPUS_VERSION:   ${ASTERISK_OPUS_VERSION}"
+          echo "DEBIAN_RELEASE:          $DEBIAN_RELEASE"
+          echo "BUILDX_PLATFORMS:        $BUILDX_PLATFORMS"
+          echo "ASTERISK_VERSION:        $ASTERISK_VERSION"
+          echo "ASTERISK_ADDONS_VERSION: $ASTERISK_ADDONS_VERSION"
+          echo "ASTERISK_OPUS_VERSION:   $ASTERISK_OPUS_VERSION"
 
-          if [ "${BUILDX_PLATFORMS}" != "" ]; then
+          if [ "$BUILDX_PLATFORMS" != "" ]; then
             docker buildx build \
               --push \
               --pull \
-              ${TAGS} \
-              --platform ${BUILDX_PLATFORMS} \
-             --build-arg DEBIAN_RELEASE="${DEBIAN_RELEASE}" \
-             --build-arg BUILD_SCRIPT="build-asterisk.sh" \
-             --build-arg ASTERISK_VERSION="${ASTERISK_VERSION}" \
-             --build-arg ASTERISK_ADDONS_VERSION="${ASTERISK_ADDONS_VERSION}" \
-             --build-arg ASTERISK_OPUS_VERSION="${ASTERISK_OPUS_VERSION}" \
-             --file ./Dockerfile \
-             .
+              --tag $TAGS \
+              --platform $BUILDX_PLATFORMS \
+              --build-arg DEBIAN_RELEASE="$DEBIAN_RELEASE" \
+              --build-arg BUILD_SCRIPT="build-asterisk.sh" \
+              --build-arg ASTERISK_VERSION="$ASTERISK_VERSION" \
+              --build-arg ASTERISK_ADDONS_VERSION="$ASTERISK_ADDONS_VERSION" \
+              --build-arg ASTERISK_OPUS_VERSION="$ASTERISK_OPUS_VERSION" \
+              --file ./Dockerfile \
+              .
           else
             docker buildx build \
               --push \
               --pull \
-              ${TAGS} \
-             --build-arg DEBIAN_RELEASE="${DEBIAN_RELEASE}" \
-             --build-arg BUILD_SCRIPT="build-asterisk.sh" \
-             --build-arg ASTERISK_VERSION="${ASTERISK_VERSION}" \
-             --build-arg ASTERISK_ADDONS_VERSION="${ASTERISK_ADDONS_VERSION}" \
-             --build-arg ASTERISK_OPUS_VERSION="${ASTERISK_OPUS_VERSION}" \
-             --file ./Dockerfile \
-             .
+              --tag $TAGS \
+              --build-arg DEBIAN_RELEASE="$DEBIAN_RELEASE" \
+              --build-arg BUILD_SCRIPT="build-asterisk.sh" \
+              --build-arg ASTERISK_VERSION="$ASTERISK_VERSION" \
+              --build-arg ASTERISK_ADDONS_VERSION="$ASTERISK_ADDONS_VERSION" \
+              --build-arg ASTERISK_OPUS_VERSION="$ASTERISK_OPUS_VERSION" \
+              --file ./Dockerfile \
+              .
           fi
 
           docker buildx prune --all --force
-
           cd -
 
       - name: Remove docker buildx instance
