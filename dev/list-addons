@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+
+set -ueo pipefail
+
+find_addons_for_asterisk_release() {
+  local ASTERISK_RELEASE="$1"
+  local URL="http://downloads.asterisk.org/pub/telephony/asterisk/old-releases"
+
+  local ASTERISK_ADDONS="$( \
+    curl \
+      --silent \
+      --location \
+      --connect-timeout 5 \
+      --max-time 10 \
+      --retry 5 \
+      --retry-delay 0 \
+      --retry-max-time 40 \
+      "${URL}" \
+    | grep '<a href="asterisk.*.tar.gz">' \
+    | grep '\-addons' \
+    | awk -F '</td><td>|">asterisk' '{print $2}' \
+    | awk -F '"' '{print $NF}' \
+    | awk -F 'asterisk-addons-' '{print $NF}' \
+    | awk -F '.tar.gz' '{print $1}' \
+    | grep -P -v '\-rc\d+' \
+    | sort --unique \
+    | sort --field-separator='.' --key=1,1n  --key=2,2n --key=3,3n --key=4,4n \
+  )"
+  echo -en "$ASTERISK_ADDONS" | grep "^$ASTERISK_RELEASE\." | tail -n1
+}
+
+ASTERISK_ADDONS="$(find_addons_for_asterisk_release "1.2")"
+echo "Latest asterisk addons version for for 1.2 is $ASTERISK_ADDONS"
+
+# set +e
+# for MAJOR_RELEASE in '1.2' '1.4' '1.6'; do
+#   echo -en "$ASTERISK_ADDONS" | grep "^$MAJOR_RELEASE\." | tail -n1
+# done
+# set -e

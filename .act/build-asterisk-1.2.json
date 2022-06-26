@@ -1,0 +1,6 @@
+{
+  "action": "workflow_call",
+  "inputs": {
+    "releases": "{\"include\":[{\"run\":\"1.2.40\"}]}"
+  }
+}
