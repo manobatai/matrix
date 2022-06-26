@@ -67,7 +67,7 @@ jobs:
 
           if [[ "${ASTERISK_VERSION}" =~ ^1\.2\. ]]; then
             DEBIAN_RELEASE="jessie-slim"
-            ASTERISK_ADDONS_VERSION="$(addons_version "${ASTERISK_VERSION}")"}
+            ASTERISK_ADDONS_VERSION="$(addons_version '1.2')"}
           elif [[ "${ASTERISK_VERSION}" =~ ^1\.4\. ]]; then
             DEBIAN_RELEASE="jessie-slim"
             ASTERISK_ADDONS_VERSION="1.4.13"
