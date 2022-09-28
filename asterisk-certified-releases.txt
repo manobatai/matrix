@@ -31,6 +31,7 @@ certified-16.8-cert7
 certified-16.8-cert8
 certified-16.8-cert9
 certified-18.9-cert1
+certified-18.9-cert2
 certified-18.9-current
 certified-13.13-cert1
 certified-13.13-cert2
