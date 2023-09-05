@@ -23,7 +23,7 @@ jobs:
       matrix: ${{ fromJson(inputs.docker-tags) }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Login to the docker registry
         uses: docker/login-action@v2
